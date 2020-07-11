@@ -6,6 +6,11 @@ import fnmatch
 from math import *
 import pandas as pd
 from scipy.signal import find_peaks
+import util
+
+import matplotlib
+matplotlib.use('Agg') # No output display
+import matplotlib.pyplot as plt
 
 
 class before_inference_sim: 
@@ -64,10 +69,15 @@ class before_inference_sim:
             
             TimeData=np.genfromtxt(FileName, delimiter='\n')
             Y,f = self.FFT(TimeData,Fs,i,win1,win2)
-            self.peaks, _ = find_peaks(Y, distance=1)
-            self.peaks2, _ = find_peaks(Y, prominence=1)      # BEST!
-            self.peaks3, _ = find_peaks(Y, width=20)
-            self.peaks4, _ = find_peaks(Y, threshold=-0.4)     # Required vertical distance to its direct neighbouring samples, pretty useless
+            
+            peaks, _ = find_peaks(Y, distance=1)
+            peaks2, _ = find_peaks(Y, distance=2, prominence=25)      # BEST!
+            peaks3, _ = find_peaks(Y, width=20)
+            peaks4, _ = find_peaks(Y, threshold=-0.4)     # Required vertical distance to its direct neighbouring samples, pretty useless
+            
+            plt.plot(peaks2, Y[peaks2], "ob"); plt.plot(Y); plt.legend(['prominence'])
+            
+            plt.savefig('foo.png')
             
 
 
@@ -76,7 +86,7 @@ class before_inference_sim:
 
     def FFT(self,TimeData,Fs,n,win1,win2):
         Ts=1/Fs
-        NFFT=2^ceil(log2(abs(len(TimeData))))
+        NFFT=2**ceil(log2(abs(len(TimeData))))
         Y = np.fft.fft(TimeData,NFFT)
         f = Fs/2*np.linspace(0,1,ceil(NFFT/2))
         magY = 20*np.log10(2*abs(Y[0:ceil(NFFT/2)]))
@@ -99,6 +109,8 @@ print('==> Options:',args)
 if __name__=='__main__':
     x = before_inference_sim(args.root_dir,args.pressure)
     x.FFTpeaks(156e6*2,200,1100)
+
+
 
     
 
