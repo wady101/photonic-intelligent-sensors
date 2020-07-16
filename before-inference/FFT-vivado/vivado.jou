@@ -1,0 +1,73 @@
+#-----------------------------------------------------------
+# Vivado v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:47:09 MDT 2019
+# IP Build 2548770 on Fri May 24 18:01:18 MDT 2019
+# Start of session at: Thu Jul 16 17:15:56 2020
+# Process ID: 13159
+# Current directory: /home/shodan/workspace/PHOTONIC/FFT-vivado
+# Command line: vivado
+# Log file: /home/shodan/workspace/PHOTONIC/FFT-vivado/vivado.log
+# Journal file: /home/shodan/workspace/PHOTONIC/FFT-vivado/vivado.jou
+#-----------------------------------------------------------
+start_gui
+create_project FFT /home/shodan/workspace/PHOTONIC/FFT-vivado/FFT -part xc7z020clg400-3
+create_bd_design "pre_inference"
+update_compile_order -fileset sources_1
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:xfft:9.1 xfft_0
+endgroup
+set_property location {1 80 -13} [get_bd_cells xfft_0]
+set_property -dict [list CONFIG.channels {1} CONFIG.implementation_options {pipelined_streaming_io} CONFIG.run_time_configurable_transform_length {true} CONFIG.aclken {false} CONFIG.target_data_throughput {50} CONFIG.number_of_stages_using_block_ram_for_data_and_phase_factors {3}] [get_bd_cells xfft_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:xadc_wiz:3.3 xadc_wiz_0
+endgroup
+set_property location {0.5 -183 -168} [get_bd_cells xadc_wiz_0]
+delete_bd_objs [get_bd_cells xadc_wiz_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 axi_bram_ctrl_0
+endgroup
+set_property location {1 -111 -31} [get_bd_cells axi_bram_ctrl_0]
+delete_bd_objs [get_bd_cells axi_bram_ctrl_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_0
+endgroup
+set_property location {1 -174 -85} [get_bd_cells axis_data_fifo_0]
+delete_bd_objs [get_bd_cells axis_data_fifo_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 blk_mem_gen_0
+endgroup
+set_property location {1 -134 -64} [get_bd_cells blk_mem_gen_0]
+delete_bd_objs [get_bd_cells blk_mem_gen_0]
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_traffic_gen:3.0 axi_traffic_gen_0
+endgroup
+set_property location {1 -154 -29} [get_bd_cells axi_traffic_gen_0]
+set_property -dict [list CONFIG.C_ATG_MODE {AXI4-Stream}] [get_bd_cells axi_traffic_gen_0]
+set_property location {1 -115 6} [get_bd_cells axi_traffic_gen_0]
+set_property -dict [list CONFIG.run_time_configurable_transform_length {false}] [get_bd_cells xfft_0]
+set_property -dict [list CONFIG.implementation_options {pipelined_streaming_io} CONFIG.number_of_stages_using_block_ram_for_data_and_phase_factors {3}] [get_bd_cells xfft_0]
+connect_bd_intf_net [get_bd_intf_pins axi_traffic_gen_0/M_AXIS_MASTER] [get_bd_intf_pins xfft_0/S_AXIS_DATA]
+startgroup
+endgroup
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
+endgroup
+set_property -dict [list CONFIG.PCW_USE_S_AXI_HP0 {1}] [get_bd_cells processing_system7_0]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4_s2mm -config {Dest_Intf "/processing_system7_0/S_AXI_HP0" Bridge_IP "New AXI DMA (High/Medium frequency transfer)" Conn_S_AXIS_CONFIG "1" Clk_Stream "Auto" Clk_MM "Auto" }  [get_bd_intf_pins xfft_0/M_AXIS_DATA]
+connect_bd_net [get_bd_pins axi_traffic_gen_0/s_axi_aclk] [get_bd_pins processing_system7_0/FCLK_CLK0]
+connect_bd_net [get_bd_pins axi_traffic_gen_0/s_axi_aresetn] [get_bd_pins rst_ps7_0_50M/peripheral_aresetn]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/axi_dma/S_AXI_LITE} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins axi_dma/S_AXI_LITE]
+apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/processing_system7_0/FCLK_CLK0 (50 MHz)} Clk_slave {/processing_system7_0/FCLK_CLK0 (50 MHz)} Clk_xbar {/processing_system7_0/FCLK_CLK0 (50 MHz)} Master {/processing_system7_0/M_AXI_GP0} Slave {/axi_traffic_gen_0/S_AXI} intc_ip {/ps7_0_axi_periph} master_apm {0}}  [get_bd_intf_pins axi_traffic_gen_0/S_AXI]
+apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
+save_bd_design
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {xfft_0_M_AXIS_DATA}]
+apply_bd_automation -rule xilinx.com:bd_rule:debug -dict [list \
+                                                          [get_bd_intf_nets xfft_0_M_AXIS_DATA] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/processing_system7_0/FCLK_CLK0" SYSTEM_ILA "Auto" APC_EN "0" } \
+                                                         ]
+set_property HDL_ATTRIBUTE.DEBUG true [get_bd_intf_nets {axi_traffic_gen_0_M_AXIS_MASTER}]
+startgroup
+apply_bd_automation -rule xilinx.com:bd_rule:debug -dict [list \
+                                                          [get_bd_intf_nets axi_traffic_gen_0_M_AXIS_MASTER] {AXIS_SIGNALS "Data and Trigger" CLK_SRC "/processing_system7_0/FCLK_CLK0" SYSTEM_ILA "Auto" APC_EN "0" } \
+                                                         ]
+endgroup
+save_bd_design
