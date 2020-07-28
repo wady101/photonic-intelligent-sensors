@@ -1,9 +1,11 @@
+`timescale 1ns/10ps
+
 module design1_tb; 
     reg clk, resetn;
     reg[15:0] tdata;
     reg tvalid;
     wire tready;
-    parameter integer C_S_AXIS_TDATA_WIDTH	= 32;
+    parameter integer C_S_AXIS_TDATA_WIDTH	= 64;
     parameter integer C_M_AXIS_TDATA_WIDTH	= 32;
     // Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
     parameter integer C_M_START_COUNT	= 32;
@@ -34,14 +36,14 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
     .S_AXIS_CONFIG_0_tready(tready),
     .S_AXIS_CONFIG_0_tvalid(tvalid),
     .aclk_0(clk),
-    .M_AXIS_DATA_0_tdata(M_AXIS_TDATA),
-    .M_AXIS_DATA_0_tlast(M_AXIS_TLAST),
-    .M_AXIS_DATA_0_tready(M_AXIS_TREADY),
-    .M_AXIS_DATA_0_tvalid(M_AXIS_TVALID),
-    .S_AXIS_DATA_0_tdata(S_AXIS_TDATA),
-    .S_AXIS_DATA_0_tlast(S_AXIS_TLAST),
-    .S_AXIS_DATA_0_tready(S_AXIS_TREADY),
-    .S_AXIS_DATA_0_tvalid(S_AXIS_TVALID)
+    .M_AXIS_DATA_0_tdata(S_AXIS_TDATA),
+    .M_AXIS_DATA_0_tlast(S_AXIS_TLAST),
+    .M_AXIS_DATA_0_tready(S_AXIS_TREADY),
+    .M_AXIS_DATA_0_tvalid(S_AXIS_TVALID),
+    .S_AXIS_DATA_0_tdata(M_AXIS_TDATA),
+    .S_AXIS_DATA_0_tlast(M_AXIS_TLAST),
+    .S_AXIS_DATA_0_tready(M_AXIS_TREADY),
+    .S_AXIS_DATA_0_tvalid(M_AXIS_TVALID)
     );    
 	// User initalization 
 	  parameter width =4;
@@ -52,13 +54,13 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
     integer               data_file    ; // file handler
     integer               scan_file    ; // file handler
     integer               index;
-    reg signed[31:0]             captured_data;
-    reg[31 : 0]                    data_reg[0:8191];
+    reg [31:0]             captured_data;
+    reg[31 : 0]                    data_reg[0:8];
     `define NULL 0    
 
 
     // End user inputs
-    always #5 clk=~clk;
+    always #2 clk=~clk;
 
    
    initial begin
@@ -74,9 +76,10 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
     f = $fopen("output.txt","w");     
       tdata = 15'b00011;
       tvalid = 1'b1;
+      scan_file = $fscanf(data_file, "%f\n", captured_data); 
       clk=1; resetn=0;
-      #10 resetn=1;
-      # 2000 
+      #3630 resetn=1;
+      # 1000 
     $fclose(f);  
     $stop;
     
@@ -400,10 +403,11 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	    begin                                            
 	      if(!M_AXIS_ARESETN)                            
 	        begin                                        
-	          stream_data_out <= data_reg[1];                      
+	          stream_data_out <= data_reg[0];                      
 	        end                                          
 	      else if (tx_en)// && M_AXIS_TSTRB[byte_index]  
-	        begin                                        
+	        begin       
+	        $display("M_AXIS: Data_reg %d, Captured_data %d\n",index,data_reg[index],captured_data);                                 
 	          stream_data_out <= data_reg[read_pointer + 32'b1];   
 	        end                                          
 	    end                                              
@@ -411,11 +415,19 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	// Add user logic here
 always @( posedge M_AXIS_ACLK )  
 begin
-    index = index +1; 
-    scan_file = $fscanf(data_file, "%f\n", captured_data); 
-    if (!$feof(data_file) && resetn) begin
+    if (!$feof(data_file)) begin
         data_reg[index] = captured_data;
-        $display("M_AXIS: Data_reg %d, Captured_data %d\n",index,data_reg[index],captured_data);
+        if(resetn && tx_en)
+        begin
+            if (read_pointer == NUMBER_OF_OUTPUT_WORDS-1)
+                index = 0;
+            else
+                begin
+                    index = index +1;
+                    scan_file = $fscanf(data_file, "%f\n", captured_data); 
+                end
+        end
+         
     end
     //use captured_data as you would any other wire or reg value;
 	// User logic ends
