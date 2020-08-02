@@ -6,7 +6,7 @@ module design1_tb;
     reg tvalid;
     wire tready;
     parameter integer C_S_AXIS_TDATA_WIDTH	= 64;
-    parameter integer C_M_AXIS_TDATA_WIDTH	= 32;
+    parameter integer C_M_AXIS_TDATA_WIDTH	= 64;
     // Start count is the number of clock cycles the master will wait before initiating/issuing any transaction.
     parameter integer C_M_START_COUNT	= 32;
      
@@ -54,8 +54,8 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
     integer               data_file    ; // file handler
     integer               scan_file    ; // file handler
     integer               index;
-    reg [31:0]             captured_data;
-    reg[31 : 0]                    data_reg[0:8];
+    reg [C_M_AXIS_TDATA_WIDTH-1 :0]             captured_data;
+    reg[C_M_AXIS_TDATA_WIDTH-1 : 0]                    data_reg[0:7];
     `define NULL 0    
 
 
@@ -74,14 +74,14 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 //  if (!$feof(data_file)) begin
 //  end
     f = $fopen("output.txt","w");     
-      tdata = 15'b00011;
+      tdata = 15'b00100;
       tvalid = 1'b1;
       scan_file = $fscanf(data_file, "%f\n", captured_data); 
       clk=1; resetn=0;
-      #3630 resetn=1;
-      # 1000 
+      #100 resetn=1;
+      # 51_000000 
     $fclose(f);  
-    $stop;
+    $finish;
     
     end
 		// Do not modify the ports beyond this line
@@ -173,7 +173,7 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	    endcase
 	end
 	// AXI Streaming Sink 
-	// 
+	// axis_tvalid
 	// The example design sink is always ready to accept the S_AXIS_TDATA  until
 	// the FIFO is not filled with NUMBER_OF_INPUT_WORDS number of input words.
 	assign axis_tready = ((mst_exec_state == WRITE_FIFO) && (write_pointer <= NUMBER_OF_INPUT_WORDS-1));
@@ -375,7 +375,7 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	      tx_done <= 1'b0;                                                           
 	    end                                                                          
 	  else                                                                           
-	    if (read_pointer <= NUMBER_OF_OUTPUT_WORDS-1)                                
+	    if (read_pointer <= NUMBER_OF_OUTPUT_WORDS-1 && S_AXIS_TVALID)                                
 	      begin                                                                      
 	        if (tx_en)                                                               
 	          // read pointer is incremented after every read from the FIFO          
@@ -396,19 +396,19 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 
 	//FIFO read enable generation 
 
-	assign tx_en = M_AXIS_TREADY && axis_tvalid;   
+	assign tx_en = M_AXIS_TREADY && axis_tvalid && S_AXIS_TVALID;   
 	                                                     
 	    // Streaming output data is read from FIFO       
 	    always @( posedge M_AXIS_ACLK )                  
 	    begin                                            
 	      if(!M_AXIS_ARESETN)                            
 	        begin                                        
-	          stream_data_out <= data_reg[0];                      
+	          stream_data_out <= (data_reg[0]<<C_M_AXIS_TDATA_WIDTH/2);                      
 	        end                                          
 	      else if (tx_en)// && M_AXIS_TSTRB[byte_index]  
 	        begin       
-	        $display("M_AXIS: Data_reg %d, Captured_data %d\n",index,data_reg[index],captured_data);                                 
-	          stream_data_out <= data_reg[read_pointer + 32'b1];   
+	        $display("M_AXIS: Data_reg %f, Captured_data %f\n",index,data_reg[index],captured_data);                                 
+	          stream_data_out <= (data_reg[read_pointer + 32'b1]<<C_M_AXIS_TDATA_WIDTH/2);   
 	        end                                          
 	    end                                              
 
@@ -417,17 +417,21 @@ always @( posedge M_AXIS_ACLK )
 begin
     if (!$feof(data_file)) begin
         data_reg[index] = captured_data;
-        if(resetn && tx_en)
+        if(resetn && tx_en && S_AXIS_TVALID)
         begin
             if (read_pointer == NUMBER_OF_OUTPUT_WORDS-1)
                 index = 0;
             else
                 begin
                     index = index +1;
-                    scan_file = $fscanf(data_file, "%f\n", captured_data); 
+                    scan_file = $fscanf(data_file, "%b\n", captured_data); 
                 end
         end
          
+    end
+    else
+    begin
+    resetn=0;
     end
     //use captured_data as you would any other wire or reg value;
 	// User logic ends

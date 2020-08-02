@@ -6,7 +6,7 @@ import fnmatch
 from math import *
 import pandas as pd
 from scipy.signal import find_peaks
-import util
+#import util
 
 import matplotlib
 matplotlib.use('Agg') # No output display
@@ -76,6 +76,8 @@ class before_inference_sim:
             peaks4, _ = find_peaks(Y, threshold=-0.4)     # Required vertical distance to its direct neighbouring samples, pretty useless
             
             plt.plot(peaks2, Y[peaks2], "ob"); plt.plot(Y); plt.legend(['prominence'])
+            plt.xlabel('Frequencies')
+            plt.ylabel('Amplitude')
             
             plt.savefig('foo.png')
             
@@ -108,7 +110,7 @@ print('==> Options:',args)
 
 if __name__=='__main__':
     x = before_inference_sim(args.root_dir,args.pressure)
-    x.FFTpeaks(156e6*2,200,1100)
+    x.FFTpeaks(156e6*2,0,8192)
 
 
 
