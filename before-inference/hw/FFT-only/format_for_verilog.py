@@ -1,27 +1,42 @@
 import os 
 import numpy as np
+import struct
 
 MAX_SAMPLES = 8192 
-IP_WIDTH = 16
+IP_WIDTH = 32
 DATA_WIDTH = 14
 
 input = np.loadtxt('./Comb3/0m.txt',delimiter="\n")
 
-# Other Transforms 
+# Basic Test Transform
 #
 #output = np.multiply(np.around(input,6),1000) #Signifcant digits
 #
 #output = np.multiply(input,1000_000) #Signifcant digits
+"""Conversion to IEEE 754"""
+def float_to_bin(num):
+    bits, = struct.unpack('!I', struct.pack('!f', num))
+    return "{:032b}".format(bits)
+integer=np.multiply(input,2**DATA_WIDTH)
+float_to_bin_vec = np.vectorize(float_to_bin)
+approx = float_to_bin_vec(integer)
 
+
+""""""""""""""""""""""""""""""""""""
+""" Below talks about the scaling method - not applicable for FFT's Xilinx Core"""
 """remove decimals output """
-input = np.multiply(input,1000_000)
+#input = np.multiply(input,1_0_000)
 """First scale to DATA_WIDTH"""
-integer = np.around(np.multiply(input,2**DATA_WIDTH))
-integer=integer.astype(np.int64)
+#integer = np.around(np.multiply(input,2**DATA_WIDTH))
+#integer=integer.astype(np.int64)
+#integer=np.multiply(input,2**DATA_WIDTH)
+#integer=  input
+#format_float_pos_vec = np.vectorize(np.format_float_positional)
+#approx = format_float_pos_vec(integer,fractional=False,precision=int(IP_WIDTH/4))
 
 """Convert to Binary"""
-binary_repr_vec = np.vectorize(np.binary_repr)
-binary = binary_repr_vec(integer,width=IP_WIDTH)
+#binary_repr_vec = np.vectorize(np.binary_repr)
+#binary = binary_repr_vec(integer,width=IP_WIDTH)
 
 """Required to get signed input.""" 
 #transform = lambda x: 1 if(x>0) else  0
@@ -33,6 +48,7 @@ binary = binary_repr_vec(integer,width=IP_WIDTH)
 
 """ If hex neeeded """
 #int(format(hex(),'x')
-output = binary
+output = approx
 
+""""""""""""""""""""""""""""""""""""""
 np.savetxt('./0m.txt',output,delimiter='\n', fmt='%s')

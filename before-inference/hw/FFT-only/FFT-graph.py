@@ -3,8 +3,9 @@ import numpy as np
 import argparse
 import re
 
+DATA_WIDTH = 14
 logs="output.txt"
-(model1, model2) = ([], [])
+model1,model2 = ([],[])
 #grab number of boosts
 
 # rows = open(logs).read().strip()
@@ -19,9 +20,17 @@ Lines = file1.readlines()
 # mod2 = set(re.findall(r"selected model 2: [-+]?\d*\.\d+|\d+", rows))
 # plot the accuracies
 k = 2
+i = 0
 for line in Lines: 
     z=line.strip()
-    model1.append(z)
+    if(z == 'x'):
+        model1.append(0)
+    elif(z == '1234567890'):
+        model2.append(model1)
+        model1=[]
+    else:
+        #model1.append(int(z)/2**DATA_WIDTH)
+        model1.append(int(z))
 #    k = k+1
 #    if(k==3):
 #        k=0
@@ -33,16 +42,20 @@ for line in Lines:
 #print(model1)
 
     
-plt.style.use("seaborn-paper")
-plt.figure()
-plt.plot(np.arange(0, len(model1)), model1,
-	label="Top-1")
-plt.title("FFT-Transform of input time signal".format(
+i =0
+for x in model2:
+    plt.style.use("seaborn-paper")
+    plt.figure()
+    plt.plot(np.arange(0, len(x)), x,
+	label="FFT")
+    plt.title("FFT-Transform of input time signal".format(
 	1,2))
-plt.xlabel("Frequencies")
-plt.ylabel("Magnitude")
-plt.legend(loc="lower right")
-plt.show()
+    plt.xlabel("Frequencies")
+    plt.ylabel("Magnitude")
+    plt.legend(loc="lower right")
+    plt.savefig("Fig%s.png" % i)
+    plt.clf()
+    i+=1
 
 
         

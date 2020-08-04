@@ -55,6 +55,7 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
     integer               scan_file    ; // file handler
     integer               index;
     reg [C_M_AXIS_TDATA_WIDTH-1 :0]             captured_data;
+//    real captured_data;
     reg[C_M_AXIS_TDATA_WIDTH-1 : 0]                    data_reg[0:7];
     `define NULL 0    
 
@@ -74,12 +75,12 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 //  if (!$feof(data_file)) begin
 //  end
     f = $fopen("output.txt","w");     
-      tdata = 15'b00100;
+      tdata = 15'b01101;
       tvalid = 1'b1;
-      scan_file = $fscanf(data_file, "%f\n", captured_data); 
+      scan_file = $fscanf(data_file, "%b\n", captured_data); 
       clk=1; resetn=0;
       #100 resetn=1;
-      # 51_000000 
+      # 510_000000 
     $fclose(f);  
     $finish;
     
@@ -222,9 +223,14 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	        begin
 	          stream_data_fifo[write_pointer] <= S_AXIS_TDATA[(byte_index*8+7) -: 8];
 	           $fwrite(f,"%d\n",   stream_data_fifo[write_pointer]);
-	        end  
+	        end
 	    end  
 	  end		
+	  always @(posedge S_AXIS_ACLK)
+	  begin
+	   if(S_AXIS_TLAST)
+               $fwrite(f,"1234567890\n");
+      end
 	endgenerate
 
 
@@ -403,12 +409,12 @@ design_1 d1 (.S_AXIS_CONFIG_0_tdata(tdata),
 	    begin                                            
 	      if(!M_AXIS_ARESETN)                            
 	        begin                                        
-	          stream_data_out <= (data_reg[0]<<C_M_AXIS_TDATA_WIDTH/2);                      
+	          stream_data_out <= data_reg[0];//<<C_M_AXIS_TDATA_WIDTH/2);                      
 	        end                                          
 	      else if (tx_en)// && M_AXIS_TSTRB[byte_index]  
 	        begin       
-	        $display("M_AXIS: Data_reg %f, Captured_data %f\n",index,data_reg[index],captured_data);                                 
-	          stream_data_out <= (data_reg[read_pointer + 32'b1]<<C_M_AXIS_TDATA_WIDTH/2);   
+//	        $display("M_AXIS: Data_reg %f, Captured_data %f\n",index,data_reg[index],captured_data);                                 
+	          stream_data_out <= data_reg[read_pointer + 32'b1];//<<C_M_AXIS_TDATA_WIDTH/2);   
 	        end                                          
 	    end                                              
 
