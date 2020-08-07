@@ -2,35 +2,30 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import re
+import IEEE754 
 
 DATA_WIDTH = 14
-logs="output.txt"
+logs="output32.txt"
 model1,model2 = ([],[])
-#grab number of boosts
 
-# rows = open(logs).read().strip()
-# epochs = str(re.findall(r"num_boost: \d+", rows))
-# epochs = re.sub('\',','',int(s) for s in epochs.split())
-# print(epochs.split())
-# epochs = [int(s) for s in epochs.split() if s.isdigit()]
-file1 = open(logs, 'r') 
+file1 = open(logs, 'rb') 
 Lines = file1.readlines() 
-# # epochs = sorted([int(e) for e in epochs])
-# mod1 = str(re.findall(r"selected model: [-+]?\d*\.\d+|\d+", rows))
-# mod2 = set(re.findall(r"selected model 2: [-+]?\d*\.\d+|\d+", rows))
-# plot the accuracies
+
+def andbytes(abytes, bbytes):
+    return bytes([a & b for a, b in zip(abytes[::-1], bbytes[::-1])][::-1])
 k = 2
 i = 0
 for line in Lines: 
     z=line.strip()
-    if(z == 'x'):
+    if(z == 'x'.rjust(64,'x')):
         model1.append(0)
-    elif(z == '1234567890'):
+    elif(z == b'1234567890'):
         model2.append(model1)
         model1=[]
     else:
         #model1.append(int(z)/2**DATA_WIDTH)
-        model1.append(int(z))
+        #model1.append(int(andbytes(z, b'11111111111111111111111111111111'),2))
+        model1.append(IEEE754.ieee754_to_int(z.decode("utf-8")))
 #    k = k+1
 #    if(k==3):
 #        k=0
@@ -39,7 +34,7 @@ for line in Lines:
 #    elif(k==2):
 #        model2.append(z)
 
-#print(model1)
+#print(model2)
 
     
 i =0
