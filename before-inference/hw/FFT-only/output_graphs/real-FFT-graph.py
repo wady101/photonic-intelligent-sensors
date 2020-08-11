@@ -21,7 +21,6 @@ for line in Lines:
         model1.append(0)
     elif(z == b'1234567890'):
         model2.append(model1)
-        model1=[]
     else:
         #model1.append(int(z)/2**DATA_WIDTH)
         #model1.append(int(andbytes(z, b'11111111111111111111111111111111'),2))
@@ -37,20 +36,19 @@ for line in Lines:
 #print(model2)
 
     
-i =0
-for x in model2:
-    plt.style.use("seaborn-paper")
-    plt.figure()
-    plt.plot(np.arange(0, len(x)), x,
+i =1
+plt.style.use("seaborn-paper")
+plt.figure()
+plt.plot(np.arange(0, len(model1)), model1,
 	label="FFT")
-    plt.title("FFT-Transform of input time signal".format(
+plt.title("FFT-Transform of input time signal".format(
 	1,2))
-    plt.xlabel("Frequencies")
-    plt.ylabel("Magnitude")
-    plt.legend(loc="lower right")
-    plt.savefig("Fig%s.png" % i)
-    plt.clf()
-    i+=1
+plt.xlabel("Frequencies")
+plt.ylabel("Magnitude")
+plt.legend(loc="lower right")
+plt.savefig("Fig%s.png" % i)
+plt.clf()
+i+=1
 
 
         

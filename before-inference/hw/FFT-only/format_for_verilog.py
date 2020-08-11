@@ -1,6 +1,7 @@
 import os 
 import numpy as np
 import struct
+import IEEE754_writer
 
 MAX_SAMPLES = 8192 
 IP_WIDTH = 32
@@ -14,14 +15,8 @@ input = np.loadtxt('./Comb3/0m.txt',delimiter="\n")
 #
 #output = np.multiply(input,1000_000) #Signifcant digits
 """Conversion to IEEE 754"""
-def float_to_bin(num):
-    bits, = struct.unpack('!I', struct.pack('!f', num))
-    return "{:032b}".format(bits)
-integer=np.multiply(input,2**DATA_WIDTH)
-float_to_bin_vec = np.vectorize(float_to_bin)
-approx = float_to_bin_vec(integer)
-
-
+vec754=np.vectorize(IEEE754_writer.IEEE754)
+approx=(vec754(input))
 """"""""""""""""""""""""""""""""""""
 """ Below talks about the scaling method - not applicable for FFT's Xilinx Core"""
 """remove decimals output """
