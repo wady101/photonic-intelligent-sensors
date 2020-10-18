@@ -97,6 +97,7 @@ module dft_testbench();
    wire [31:0] X3;
    wire [31:0] Y3;
    reg clrCnt;
+
    // File IO 
     wire [64:0] qword;
     integer               data_file    ; // file handler
@@ -106,8 +107,7 @@ module dft_testbench();
     integer f;
     integer NFFTctr;
     integer NFFTreadctr;
-    
-    // File IO End
+   // File IO End
     
    assign X0 = in[0];
    assign X1 = in[1];
@@ -115,7 +115,6 @@ module dft_testbench();
    assign X3 = in[3];
 
    initial clk = 0;
-
    always #10 clk = ~clk;
 
 
@@ -157,20 +156,12 @@ module dft_testbench();
       while (!$feof(data_file)) begin
       // The 64 complex data points enter the system over 32 cycles
           // Input: 2 complex words per cycle
-          NFFTctr=NFFTctr+1;
-//         for (k=0; k < 4; k = k+2) 
+            NFFTctr=NFFTctr+1;
             scan_file = $fscanf(data_file, "%b\n",in[0] );
             in[1] <= 32'b0;
-//            in[2] <= 32'b0;            
             scan_file = $fscanf(data_file, "%b\n",in[2] );
-//            in[k+2] <= 32'b0;            
             in[3] <= 32'b0;            
             
-            //in[k] <= j*4 + k;
-//            if(k>=2)
-//                k=0;
-//            else
-//                k=k+2;
             if(NFFTctr==8193) begin 
                      next <= 1;
                     clrCnt <= 1;
