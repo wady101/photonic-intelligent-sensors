@@ -22,22 +22,8 @@ for line in Lines:
     elif(z == b'1234567890'):
         model2.append(model1)
     else:
-        #model1.append(int(z)/2**DATA_WIDTH)
-        #model1.append(int(andbytes(z, b'11111111111111111111111111111111'),2))
         model1.append(IEEE754.ieee754_to_int(z.decode("utf-8")))
-#    k = k+1
-#    if(k==3):
-#        k=0
-#    elif(k==1):
-#        model1.append(z)
-#    elif(k==2):
-#        model2.append(z)
-
-#print(model2)
-
-    
 i =1
-plt.style.use("seaborn-paper")
 plt.figure()
 plt.plot(np.arange(0, len(model1)), model1,
 	label="FFT")
@@ -49,8 +35,3 @@ plt.legend(loc="lower right")
 plt.savefig("Fig%s.png" % i)
 plt.clf()
 i+=1
-
-
-        
-
-

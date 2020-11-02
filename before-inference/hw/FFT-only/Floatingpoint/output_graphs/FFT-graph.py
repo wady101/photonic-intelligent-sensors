@@ -22,29 +22,14 @@ for line in Lines:
         model1.append(0)
     elif(z == b'1234567890'):
         model2.append(model1)
-        #model1=[]
     else:
-        #model1.append(int(z)/2**DATA_WIDTH)
         real=andbytes(z, b'11111111111111111111111111111111')
         img=andbytes(z, b'1111111111111111111111111111111100000000000000000000000000000000')
         real_f=IEEE754.ieee754_to_int(real.decode("utf-8"))
         img_f=IEEE754.ieee754_to_int(img.decode("utf-8"))
         model1.append(math.sqrt((img_f**2)+(real_f**2)))
-                
-#    k = k+1
-#    if(k==3):
-#        k=0
-#    elif(k==1):
-#        model1.append(z)
-#    elif(k==2):
-#        model2.append(z)
-
-#print(model2)
-
-    
 i=0
 x=model1
-plt.style.use("seaborn-paper")
 plt.figure()
 plt.plot(np.arange(0, len(x)), x,
 	label="FFT")
@@ -56,8 +41,4 @@ plt.legend(loc="lower right")
 plt.savefig("Fig%s.png" % i)
 plt.clf()
 i+=1
-
-
-        
-
 
