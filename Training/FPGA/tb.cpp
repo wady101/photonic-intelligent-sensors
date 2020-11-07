@@ -1,6 +1,7 @@
 #include "parameters.h"
 #include "fnn.hpp"
 
+void NNtop (elem in[35], elem out[6], bool init, int numBatches);
 int main ()
 {
 elem in[35] = {
@@ -33,8 +34,6 @@ int numBatches = 0;
 elem inter1[512];
 elem inter2[256];
 puts("Starting first layer");
-FullyConnectedLayers1(in,inter1,numBatches,weight1,bias1);
-FullyConnectedLayers2(inter1,inter2,numBatches,weight2,bias2);
-FullyConnectedLayers3(inter2,out,numBatches,weight3,bias3);
+NNtop(in, out, init, numBatches);
 puts("Pipeline finished");
 }
