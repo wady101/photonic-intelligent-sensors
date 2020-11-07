@@ -1,5 +1,5 @@
-#include "parameters.h"
-#include "fnn.hpp"
+#include<iostream>
+typedef double elem ;
 
 void NNtop (elem in[35], elem out[6], bool init, int numBatches);
 int main ()
@@ -33,7 +33,7 @@ bool init = true;
 int numBatches = 0;
 elem inter1[512];
 elem inter2[256];
-puts("Starting first layer");
 NNtop(in, out, init, numBatches);
-puts("Pipeline finished");
+for(int i=0; i<6; i++)
+std::cout<<out[i]<<std::endl;
 }
