@@ -1,5 +1,6 @@
 #include<iostream>
-typedef double elem ;
+#include<ap_fixed.h>
+typedef ap_fixed<32,7> elem ;
 
 void NNtop (elem in[35], elem out[6], bool init, int numBatches);
 int main ()
@@ -28,11 +29,9 @@ elem in[FC1_IN] = {
   -58.6740, -57.5550, -56.8370, -57.5740, -57.5300, -55.1840, -54.3430
 }; // class = 2
 */
-elem out[6];
+elem out[6] = {1,1,1,1,1,1};
 bool init = true;
 int numBatches = 0;
-elem inter1[512];
-elem inter2[256];
 NNtop(in, out, init, numBatches);
 for(int i=0; i<6; i++)
 std::cout<<out[i]<<std::endl;

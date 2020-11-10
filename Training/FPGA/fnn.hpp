@@ -1,12 +1,11 @@
 #include "ap_int.h"
 #include "hls_stream.h"
 
-typedef ap_fixed<32, 7> elem ;
+typedef ap_fixed<32,7> elem ;
 elem mac(elem output,elem input, elem weight)
     {
-      elem varbuffer = output;
-      varbuffer = output+input*weight;
-      return varbuffer;
+      output = output+input*weight;
+      return output;
     }
 
 void FullyConnectedLayers1( elem in[35], elem out[512], int numBatches,  elem weights[512][35],  elem bias[512])
