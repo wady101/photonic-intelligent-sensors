@@ -8,16 +8,15 @@ from torch.utils.data.sampler import SubsetRandomSampler
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
 class Net(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.fc1 = nn.Linear(35, 512)
+        self.fc1 = nn.Linear(35, 16)
         # linear layer (n_hidden -> hidden_2)
-        self.fc2 = nn.Linear(512, 256)
+        self.fc2 = nn.Linear(16, 8)
         # linear layer (n_hidden -> 10)
-        self.fc3 = nn.Linear(256, 6)
+        self.fc3 = nn.Linear(8, 6)
         # dropout layer (p=0.2)
 
         # dropout layer (p=0.2)
@@ -27,18 +26,18 @@ class Net(nn.Module):
     def forward(self, x):
         # x = x.view(-1, 35)
         # add hidden layer, with relu activation function
-        x = torch.relu(self.fc1(x))
+        x = self.fc1(x)
         # x = self.dropout(x)
-        x = torch.relu(self.fc2(x))
+        x =self.fc2(x)
         # x = self.dropout(x)
-        x = torch.relu(self.fc3(x))
+        x = self.fc3(x)
         # x = self.dropout(x)
         return x
 
 
 class GasPressureDataset(torch.utils.data.Dataset):
 
-       def __init__(self, directory, num_csv):
+    def __init__(self, directory, num_csv):
         self.transform = ""
         self.directory = directory
         self.num_csv = num_csv
@@ -50,7 +49,8 @@ class GasPressureDataset(torch.utils.data.Dataset):
             filename = 'TrainingInputs%d.csv' % itr_csv
             raw_data = open(self.directory + filename, 'rt')
             reader = csv.reader(raw_data, delimiter=',', quoting=csv.QUOTE_NONE)
-            reader_numpy = numpy.transpose(numpy.array(tuple(reader)).astype('float32'))
+            reader_numpy = numpy.array(tuple(reader)).astype('float32')
+            # reader_numpy = numpy.transpose(numpy.array(tuple(reader)).astype('float32'))
             self.numdata = numpy.delete(numpy.concatenate((self.numdata, reader_numpy)), 0, 0)
             numdata_x, numdata_y = reader_numpy.shape
             self.numpressure = numpy.delete(numpy.concatenate(
@@ -74,7 +74,8 @@ class GasPressureDataset(torch.utils.data.Dataset):
 class AmonniaOrNot:
 
     def __init__(self):
-        self.directory = '/home/kogami/workspace/InPhoSS-RA/Peak-detection/MatlabSim/Afterpeak/'
+        # self.directory = '/home/kogami/workspace/InPhoSS-RA/Peak-detection/MatlabSim/Afterpeak/'
+        self.directory = '/home/kogami/workspace/InPhoSS-RA/FFT/Matlab/'
         self.pwd = os.path.dirname(os.path.realpath(__file__))
         self.num_csv = 6
         self.num_csv_valid = 2
@@ -84,7 +85,7 @@ class AmonniaOrNot:
         self.inputdatavalid = numpy.zeros([1, 35])
         self.batchsize = 1
         self.batches = 60
-        self.epochs = 100
+        self.epochs = 150
         self.valid_loss_min = numpy.Inf  # set initial "min" to infinity
         self.model = Net()
         self.criterion = nn.CrossEntropyLoss()  # specify optimizer (stochastic gradient descent) and learning rate = 0.01
@@ -106,23 +107,21 @@ class AmonniaOrNot:
             numpy.random.shuffle(indices)
         train_test_indices, val_indices = indices[split:], indices[:split]
 
-        test_split = .1
+        test_split = .5
         testsplit = int(numpy.floor(test_split * dataset_size))
         if shuffle_dataset:
             numpy.random.seed(random_seed)
             numpy.random.shuffle(train_test_indices)
         train_indices, test_indices = train_test_indices[testsplit:], train_test_indices[:testsplit]
-        train_sampler = torch.utils.data.RandomSampler(train_indices)
-        valid_sampler = torch.utils.data.RandomSampler(val_indices)
-        test_sampler = torch.utils.data.RandomSampler(test_indices)
-
+        train_sampler = torch.utils.data.SubsetRandomSampler(train_indices)
+        valid_sampler = torch.utils.data.SubsetRandomSampler(val_indices)
+        test_sampler = torch.utils.data.SubsetRandomSampler(test_indices)
         self.train_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batchsize,
                                                         sampler=train_sampler, num_workers=0)
         self.validation_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batchsize,
                                                              sampler=valid_sampler, num_workers=0)
         self.test_loader = torch.utils.data.DataLoader(dataset, batch_size=self.batchsize,
                                                        sampler=test_sampler, num_workers=0)
-
 
     def train(self):
         valid_running_loss = 0.0
@@ -132,12 +131,13 @@ class AmonniaOrNot:
         torch.backends.cudnn.benchmark = True
         self.model.to(device)
         # specify loss function (categorical cross-entropy)
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=0.00_000_001)
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=0.00_0005)
         criterion = nn.CrossEntropyLoss()
         running_loss = 0
         graph_running_loss = 0
         loss_values = []
         valid_running_loss_values = []
+        print(len(self.train_loader))
         # Loop over epochs
         for epoch in range(self.epochs):
             # Training
@@ -149,6 +149,10 @@ class AmonniaOrNot:
                     local_pressure.cuda()), torch.tensor(local_batch.cuda())
                 optimizer.zero_grad()
                 output = self.model(local_batch)
+                # print("Output ")
+                # print(output)
+                # print("Local_pressure ")
+                # print(local_pressure.flatten().to(device).long())
                 loss = criterion(output, local_pressure.flatten().to(device).long())
 
                 loss.backward()
@@ -161,6 +165,7 @@ class AmonniaOrNot:
                     running_loss = 0.0
                     # with torch.no_grad:
                 if(epoch == self.epochs-1):
+                    torch.save(self.model.state_dict(), 'model.pt')
                     pd.DataFrame(self.model.fc1.weight.detach().cpu().numpy()).to_csv('model_fc1_wts.dat', header=None, index=None, sep='\n')
                     pd.DataFrame(self.model.fc2.weight.detach().cpu().numpy()).to_csv('model_fc2_wts.dat', header=None, index=None, sep='\n')
                     pd.DataFrame(self.model.fc3.weight.detach().cpu().numpy()).to_csv('model_fc3_wts.dat', header=None, index=None, sep='\n')
@@ -177,19 +182,18 @@ class AmonniaOrNot:
                     local_pressure, local_batch = local_pressure.to(
                         device), local_batch.to(device)
                     output = self.model(local_batch)
-                    valid_loss = torch.nn.functional.nll_loss(output,
-                                                              local_pressure.flatten().to(device).long())
-                    valid_running_loss += valid_loss.item()
+                    valid_loss = criterion(output, local_pressure.flatten().to(device).long())
+                    valid_running_loss += valid_loss.item() /self.batches
                     # print('Validating [%d, %5d] loss: %.3f' %
                     #       (epoch + 1, batch_idx + 1, valid_running_loss / 2000))
                     # save model if validation loss has decreased
-                    valid_running_loss_values.append(-(valid_running_loss - 100))
                     if valid_running_loss <= self.valid_loss_min:
                         # print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
                         #     self.valid_loss_min,
                         #     valid_running_loss))
                         # torch.save(self.model.state_dict(), 'model.pt')
                         self.valid_loss_min = valid_running_loss
+                valid_running_loss_values.append(-(valid_running_loss - 100))
 
             loss_values.append(-(graph_running_loss - 100))
 
@@ -197,16 +201,13 @@ class AmonniaOrNot:
         print('Finished training')
         f = plt.figure(1)
         plt.plot(loss_values, label = "Training accuracy")
+        plt.plot(valid_running_loss_values, label="Validation accuracy")
+        plt.legend(loc="lower right")
         plt.xlabel("Number of Batches")
         plt.ylabel("Accuracy (%)")
         plt.title("Training results for Pressure classification ")
         f.show()
-        g = plt.figure(2)
-        plt.plot(valid_running_loss_values, label = "Validation accuracy")
-        plt.xlabel("Number of Batches")
-        plt.ylabel("Accuracy (%)")
-        plt.title("Validation results for Pressure classification ")
-        g.show()
+
         input()
 
     def test(self):
@@ -227,7 +228,6 @@ class AmonniaOrNot:
             for local_pressure, local_batch in self.test_loader:
                 local_pressure, local_batch = local_pressure.to(
                     device), local_batch.to(device)
-
                 outputs = self.model(local_batch)
                 loss = criterion(outputs, local_pressure.flatten().to(device).long())
                 test_loss += loss.item()
@@ -257,6 +257,5 @@ class AmonniaOrNot:
 if __name__ == '__main__':
     classobj = AmonniaOrNot()
     classobj.create_dataset()
-    # classobj.read_csv_valid()
     classobj.train()
     classobj.test()
