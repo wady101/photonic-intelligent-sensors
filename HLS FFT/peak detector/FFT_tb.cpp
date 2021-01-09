@@ -4,17 +4,12 @@
 #include<stdio.h>
 #include<math.h>
 
-#define MAX 8192
-
 using namespace std;
 
 #define M_PI 3.1415926535897932384
 
 
-//void Peaks(double arr[50], int n);
-
-double FFT(complex<double> f[8192], int N, int d);
-
+void FFT(complex<float> f[8192], float out[6]);
 
 using namespace std;
 
@@ -22,11 +17,13 @@ int main()
 {
 
   int n = 8192;
-  int d = 1;
+  //int d = 1;
 
   cout << "specify the array" << endl;
 
-  complex< double> vec[8192] = {
+  float output[6] = {0,};
+
+complex< float> vec[8192] = {
 		  0.000610231267634569,
 		  		  0.00284489885481665,
 		  		  0.00283277581486525,
@@ -8218,30 +8215,15 @@ int main()
 		  		  0.00202592824656122,
 		  		  0.00170581801859524,
 		  		  0.00113501161059885
-		  	//	  0.00142847170404344,
-		  	//	 0.00192986403167405,
-		  	//	  0.0017872776863834,
+
 
 };
 
-  double finalop;
 
-
-finalop =  FFT(vec, n, d);
+FFT(vec,output);
   cout << "...printing the FFT of the array size 8192 with all imaginary part as 0" << endl;
 
-	cout << finalop << endl;
-  /*
-  double magvec[50] = {0,};
-  for(int j = 0; j < n; j++){
-  cout << abs(vec[j]) << endl;
-  magvec[j] = abs(vec[j]);
-  //cout << magvec[j] << endl;
-  }
 
-  int l = sizeof(magvec) / sizeof(magvec[0]);
-  //cout << n << endl;
-  Peaks(magvec, l);
-*/
+
   return 0;
 }
